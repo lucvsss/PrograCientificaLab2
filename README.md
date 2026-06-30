@@ -209,104 +209,95 @@ Todas las figuras (`heatmap_similitud_libros.png`, `pca_*.png`, `matriz_confusio
 
 ```mermaid
 classDiagram
-    class Verse {
-        +str verse_id
-        +int book_id
-        +int chapter
-        +int verse_num
-        +str text
-        +str book_name
-        +str testament
+    class Biblia {
+        +dict testamentos
+        +from_dataframe(df) Biblia
+        +agregar_versiculo(v, testamento, libro)
+        +to_dataframe() DataFrame
+        +get_resumen() DataFrame
+        +get_resumen_generos() DataFrame
     }
-
-    class BibleCorpus {
-        +dict book_map
-        +DataFrame df
-        +list~Verse~ verses
-        +get_verses_by_book(book_name) list
-        +get_book_names() list
-        +get_testament_names() list
+    class Testamento {
+        +str nombre
+        +dict libros
+        +agregar_libro(libro)
     }
-    BibleCorpus "1" *-- "many" Verse
-
+    class Libro {
+        +str nombre
+        +str testamento
+        +str genero
+        +dict capitulos
+        +agregar_versiculo(v)
+        +get_texto_completo() str
+    }
+    class Capitulo {
+        +int numero
+        +list versiculos
+        +agregar_versiculo(v)
+    }
+    class Versiculo {
+        +str libro
+        +int capitulo
+        +int numero
+        +str texto_original
+        +list texto_procesado
+    }
+    Biblia "1" *-- "2" Testamento
+    Testamento "1" *-- "*" Libro
+    Libro "1" *-- "*" Capitulo
+    Capitulo "1" *-- "*" Versiculo
+ 
     class TextPreprocessor {
-        +dict vocab
-        +Counter freq
-        +list processed_verses
-        +preprocess_text(text) list
-        +build()
-        +get_top_words(n) list
-        +tokens_for_text(text) list
+        +set stopwords
+        +process(text) list
+        +process_corpus(textos) list
+        +palabras_mas_frecuentes(n)
     }
-    TextPreprocessor --> BibleCorpus : usa
-
+ 
     class TFIDFVectorizer {
-        +list vocabulary
+        +dict vocabulario
         +ndarray idf
-        +ndarray matrix
-        +fit_transform(docs) ndarray
+        +bool normalizar
+        +fit(docs)
         +transform(docs) ndarray
-        +get_book_vectors() tuple
+        +fit_transform(docs) ndarray
     }
-    TFIDFVectorizer --> TextPreprocessor : usa
-
-    class SearchEngine {
-        +search(query, k) DataFrame
-        +search_by_verse(book, ch, v, k) DataFrame
-        +cosine_similarity_vector(q, m) ndarray
+ 
+    class SemanticSearchEngine {
+        +fit(df_corpus)
+        +buscar(query, k) DataFrame
+        +buscar_por_indice(idx, k) DataFrame
     }
-    SearchEngine --> BibleCorpus : usa
-    SearchEngine --> TextPreprocessor : usa
-    SearchEngine --> TFIDFVectorizer : usa
-
+    SemanticSearchEngine --> TFIDFVectorizer
+    SemanticSearchEngine --> TextPreprocessor
+ 
     class VerseClassifier {
-        +str model_type
-        +float accuracy
-        +train(test_size)
-        +predict(text) str
-        +report() str
-        +confusion_matrix() ndarray
+        +str modelo
+        +entrenar(X, y)
+        +evaluar() dict
+        +predecir(X) ndarray
     }
-    VerseClassifier --> BibleCorpus : usa
-    VerseClassifier --> TextPreprocessor : usa
-    VerseClassifier --> TFIDFVectorizer : usa
-
-    class NGramGenerator {
-        +build(n_values)
-        +generate(n, seed_word, max_len) str
-        +compare_models(seed_word) dict
-        +perplexity(n, test_sequences) float
+ 
+    class NGramModel {
+        +int n
+        +fit(oraciones)
+        +get_siguiente_palabra(contexto)
+        +generar(palabra_inicial, max_len) str
     }
-    NGramGenerator --> BibleCorpus : usa
-    NGramGenerator --> TextPreprocessor : usa
-
+ 
     class SentimentAnalyzer {
-        +dict LEXICON
-        +DataFrame df_results
-        +analyze()
-        +by_book() DataFrame
-        +by_chapter(book_name) DataFrame
-        +extremes(n) dict
+        <<interface>>
+        +score(texto) float
     }
-    SentimentAnalyzer --> BibleCorpus : usa
-    SentimentAnalyzer --> TextPreprocessor : usa
-
-    class BibleVisualizer {
-        +plot_verse_length_distribution()
-        +plot_verses_per_book()
-        +plot_top_words(n)
-        +plot_book_similarity_heatmap()
-        +plot_pca_verses(sample_size)
-        +plot_sentiment_by_book()
-        +plot_keyword_evolution()
-        +plot_ngram_comparison(generator)
-        +plot_confusion_matrix(classifier)
-        +plot_sentiment_chapters(book_name)
+    class LexiconSentimentAnalyzer {
+        +dict lexico
+        +score(texto) float
     }
-    BibleVisualizer --> BibleCorpus : usa
-    BibleVisualizer --> TextPreprocessor : usa
-    BibleVisualizer --> TFIDFVectorizer : usa
-    BibleVisualizer --> SentimentAnalyzer : usa
+    class TextBlobSentimentAnalyzer {
+        +score(texto) float
+    }
+    SentimentAnalyzer <|-- LexiconSentimentAnalyzer
+    SentimentAnalyzer <|-- TextBlobSentimentAnalyzer
 ```
 
 ## Integrantes
