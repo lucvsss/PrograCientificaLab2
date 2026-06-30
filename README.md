@@ -1,5 +1,3 @@
-<a href="bibliabanner"><img src="./imgs/bible_banner.png" align="center" alt="bible" ></a>
-
 <h1 align="center"> Taller 02 - Programación Científica </h1>
 
 <p align = center>
